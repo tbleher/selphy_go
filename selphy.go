@@ -237,6 +237,16 @@ func (c *device) id_reply(head []byte, body []byte) {
 }
 
 func (c *device) status_reply(head []byte, body []byte) {
+
+        if (body[2] == 0x01) {
+	     fmt.Println("Paper Cassette not installed")
+	     os.Exit(1);
+	}
+        if (body[3] == 0x01) {
+	     fmt.Println("Ribbon not installed")
+	     os.Exit(1);
+	}
+
 	/* TODO:  Parse status reply to check for errors or whatnot! */
 
 	p := cpnp_packet(CPNP_MSG_FLUSH, []byte{0,0,0,0})
@@ -387,7 +397,7 @@ func (c *device) print_data_request(head []byte, body []byte) {
 		c.send(p, c.job_done)
 	case 0x04:
 	        /* ERROR */
-		fmt.Println("Printer reported error 4")
+		fmt.Println("Printer reported error.")
 		os.Exit(1)
 	default:
 		fmt.Println("Printer reported unknown state %d", state)
