@@ -94,15 +94,15 @@ GET_STATUS_REQ (0x0120)
 43 50 4e 50   CPNP 
 01 20         GET_STATUS
 00 00 00 00   SEQUENCE
-00 XX 00 00   status type == Seen 0x00 (via udp) and 0x01/0x02 (via tcp)
+00 XX 00 00   (??? Job ID for TCP?)
 00 00         (no payload)
 
-GET_STATUS_RESP (0x8120) (type 0x00)
-------------------------------------
+GET_STATUS_RESP (0x8120) over UDP
+----------------------------------
 43 50 4e 50   CPNP 
 81 20         GET_STATUS
 00 00 00 00   SEQUENCE
-00 00 00 00   (type 0x00)
+00 00 00 00   (always null)
 02 00         (512-byte payload)
 
 01 01 YY XX 43 61 6e 6f 6e 20 43 50 39 30 30 00  YY paper, XX ribbon. 01 = missing, 04 = ready
@@ -138,13 +138,26 @@ ff ff ff ff 40 00 40 00 40 1f 40 1f d0 04 10 07
 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
-GET_STATUS_RESP (0x8120) (type 0x01 or 0x02)
-------------------------------------
+GET_STATUS_RESP (0x8120) over TCP
+----------------------------------
 43 50 4e 50   CPNP 
 81 20         GET_STATUS
 00 00 00 00   SEQUENCE
-00 01 00 00   (type 0x01 -- or 0x02)
+00 XX 00 00   (seen 0x01 or 0x02 -- maybe job id?)
 00 40         (64-byte payload)
+
+  [ Attempt to decode the details ]
+  
+  00 00 01 10 04 04 00 00 00 00 00 00 00 00 00 00
+  00 00 SS 00 01 00 00 00 XX XX XX XX YY YY YY YY
+  00 90 01 00 00 00 00 00 00 00 00 00 00 00 00 00
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+  SS: State. 00 wait/01 flags/02 data req/03 done/04 error
+  XX:  Data req offset (Little endian)
+  YY:  Data req length (Little endian)
+  
+[ Examples of output I've seen ]
 
 00 00 01 10 04 04 00 00 00 00 00 00 00 00 00 00 (??? variation 1)
 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00
