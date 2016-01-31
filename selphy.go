@@ -48,12 +48,13 @@ import (
 const (
 	CPNP_ADDR = "255.255.255.255"
 	CPNP_PORT = 8609
-	
+
 	CPNP_MSG_DISCOVER = 0x101
 	CPNP_MSG_STARTTCP = 0x110
 	CPNP_MSG_ID       = 0x130
 	CPNP_MSG_STATUS   = 0x120
 	CPNP_MSG_DATA     = 0x121
+	CPNP_MSG_FLUSH    = 0x151
 )
 
 type cmd_handler func(head []byte, body []byte)
@@ -175,7 +176,7 @@ func (c *device) wait_tcp() {
 	}
 	
 	msglen := 16 + binary.BigEndian.Uint32(c.tcpbuf[12:])
-	
+
 	if (len(c.tcpbuf) < int(msglen)) {
 		return
 	}
@@ -236,17 +237,19 @@ func (c *device) id_reply(head []byte, body []byte) {
 }
 
 func (c *device) status_reply(head []byte, body []byte) {
-	/* Might tell us stuff like "go away I'm busy!"? */
-	c.cb()
+	/* TODO:  Parse status reply to check for errors or whatnot! */
+
+	p := cpnp_packet(CPNP_MSG_FLUSH, []byte{0,0,0,0})
+	c.send(p, c.flush)
 }
 
 func (c *device) start_job(job *imgreader) {
 	c.job = job
-	
+
 	u, _ := user.Current()
-	
+
 	_, fn := filepath.Split(job.fn)
-	
+
 	b := make([]byte, 0x188)
 	utf16_write(b[0x008:0x048], "selphy.go")
 	utf16_write(b[0x048:0x088], u.Username)
@@ -256,16 +259,21 @@ func (c *device) start_job(job *imgreader) {
 	c.send(p, c.start_tcp)
 }
 
+func (c *device) flush(head []byte, body []byte) {
+
+     /* Flush completed, now we can start dumping real data over */
+     c.cb()
+}
+
 func (c *device) start_tcp(head []byte, body []byte) {
 	c.jobseq = binary.BigEndian.Uint16(head[10:])
-	
+
 	port := binary.BigEndian.Uint16(body[4:])
 	if port == 0 {
-		/* TODO: Throw a big fat error. */
-		fmt.Println("Help! No TCP port to connect to..")
-		return
+		fmt.Println("Printer not ready to accept data and probably requires restarting")
+		os.Exit(1)
 	}
-	
+
 	fmt.Printf("Should connect to TCP %s:%d ... ", c.dest.IP, port)
 	c.tcpd = new(net.TCPAddr)
 	c.tcpd.IP = c.dest.IP
@@ -332,8 +340,14 @@ func (c *device) job_done(head []byte, body []byte) {
 }
 
 func (c *device) print_data_request(head []byte, body []byte) {
-	state := int(body[0x12])
-	fmt.Println("state", state)
+        state := 0
+	
+	if (len(body) < 0x12) {
+		fmt.Println("state too short: %d", len(body))
+        } else {
+		state = int(body[0x12])
+		fmt.Println("state %d", state)
+	}
 	
 	/* It frequently seems to repeat the last status response, I suppose
 	   that means it's still processing. Give it half a second. */
