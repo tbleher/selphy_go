@@ -9,3 +9,17 @@ and possibly rewrite it in pure C and merge that into my selphy_print
 backend suite.
 
  - Solomon Peachy
+
+
+To-do items: 
+
+  * Better decode printer status message
+    * Remaining media (?)
+    * Loaded ribbon and/or paper types
+    * Ribbon not loaded
+    * Paper not loaded
+    * Ribbon depleted
+    * Paper depleted
+    * Other errors?
+  * Debug PNG jobs
+  * Figure out if it's possible to send "native" data instead of a jpeg
