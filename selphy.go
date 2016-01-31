@@ -385,6 +385,13 @@ func (c *device) print_data_request(head []byte, body []byte) {
 		b[2] = 0x03 // Echo status code? No clue..
 		p := cpnp_packet(CPNP_MSG_DATA, b)
 		c.send(p, c.job_done)
+	case 0x04:
+	        /* ERROR */
+		fmt.Println("Printer reported error 4")
+		os.Exit(1)
+	default:
+		fmt.Println("Printer reported unknown state %d", state)
+		os.Exit(1)
 	}
 }
 
@@ -486,7 +493,7 @@ func (p *printer) start_job() {
 		fmt.Println("Ran out of stuff to do, exiting")
 		os.Exit(0)
 	}
-	
+
 	job := p.jobs[0]
 	fmt.Println("Will send", job.fn)
 	p.dev.start_job(job)
