@@ -15,9 +15,7 @@ To-do items:
 
   * Better decode printer status message
     * Remaining media (?)
-    * Loaded ribbon and/or paper types
-    * Ribbon not loaded
-    * Paper not loaded
+    * Loaded ribbon and/or paper typeso
     * Ribbon depleted
     * Paper depleted
     * Other errors?
