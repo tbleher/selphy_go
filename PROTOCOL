@@ -231,10 +231,10 @@ DATA (0x0121)
 43 50 4e 50   CPNP
 01 21         DATA
 00 00 00 00   SEQUENCE
-00 00 00 00   (args)
+00 01 00 00   (args)
 00 40         (payload len)
 
-Two variations.  First one is flags:
+Three variations.  First one is flags:
 
 00 00 00 00 XX XX XX XX 00 00 00 00 YY YY YY YY   XX == msg len (64) YY == unknown, always 0x01
 00 00 QQ 00 00 00 00 00 00 00 00 00 00 00 00 00   QQ: 03 border, 02 none
@@ -242,6 +242,36 @@ Two variations.  First one is flags:
 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
 Second one is pure payload.  payload len is actual bytes. (Max 4096 bytes?)
+
+Third one is the end of job stuff:
+
+00 00 03 00 XX XX XX XX 00 00 00 00 00 00 00 00   XX == msg len (64)
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+DATA_RESP (0x8121)
+--------------------
+43 50 4e 50   CPNP
+81 21         DATA
+00 00 00 00   SEQUENCE
+00 01 00 00   (args)
+00 04         (payload len)
+
+Payload is always 4 bytes:
+
+00 00 XX 00
+00 00 LL LL
+
+ LL == bytes received 
+ XX == printer state.
+       00: Wait        [ busy? ]
+       01: Send flags  [ ready for job ]
+       02: Send data   [ ready for image data ]
+       03: Done        [ print complete, send final packet ]
+       04: Error       [ reported error ]
+
+  Not sure how to tell the difference which one is in use?
 
 END_JOB_REQ (0x0111)
 --------------------
