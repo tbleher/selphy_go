@@ -27,7 +27,7 @@ Identified commands:
  * 0x111   END_JOB       ?? Sent at end of job
  * 0x121   DATA
 
-DISCOVER_REQ (0x0121)
+DISCOVER_REQ (0x0101)
 ---------------------
 43:50:4e:50   CPNP
 01:01         DISCOVER
@@ -35,7 +35,7 @@ DISCOVER_REQ (0x0121)
 00:00:00:00   (no args)
 00:00         (no payload)
 
-DISCOVER_RESP (0x8121)
+DISCOVER_RESP (0x8101)
 ----------------------
 43:50:4e:50   CPNP
 81:01         DISCOVER
@@ -105,7 +105,10 @@ GET_STATUS_RESP (0x8120) over UDP
 00 00 00 00   (always null)
 02 00         (512-byte payload)
 
-01 01 YY XX 43 61 6e 6f 6e 20 43 50 39 30 30 00  YY paper, XX ribbon. 01 = missing, 04 = ready
+01 01
+YY XX         YY paper, XX ribbon. 01 = missing, 04 = ready. 
+43 61 6e 6f 6e 20 43 50 39 30 30 00 == 'Canon CP900'  (ie printer identifier)
+
 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 00 00 00 00 00 00 00 00 00 00 01 01 02 01 01 01
 00 80 00 00 00 00 00 00 00 00 00 00 00 00 00 00
@@ -222,6 +225,23 @@ GET_STATUS_RESP (0x8120) over TCP
 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 00 90 01 00 00 00 00 00 00 00 00 00 00 00 00 00
 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+DATA (0x0121)
+-----------------------
+43 50 4e 50   CPNP
+01 21         DATA
+00 00 00 00   SEQUENCE
+00 00 00 00   (args)
+00 40         (payload len)
+
+Two variations.  First one is flags:
+
+00 00 00 00 XX XX XX XX 00 00 00 00 YY YY YY YY   XX == msg len (64) YY == unknown, always 0x01
+00 00 QQ 00 00 00 00 00 00 00 00 00 00 00 00 00   QQ: 03 border, 02 none
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+Second one is pure payload.  payload len is actual bytes. (Max 4096 bytes?)
 
 END_JOB_REQ (0x0111)
 --------------------
