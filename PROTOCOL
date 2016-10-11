@@ -20,12 +20,12 @@ Identified commands:
 
  * 0x000   NULL          ???  No idea what this does
  * 0x101   DISCOVER
- * 0x130   GET_ID        (IEEE1284 Printer ID)
- * 0x120   GET_STATUS
- * 0x151   FLUSH
  * 0x110   START_TCP
  * 0x111   END_JOB       ?? Sent at end of job
+ * 0x120   GET_STATUS
  * 0x121   DATA
+ * 0x130   GET_ID        (IEEE1284 Printer ID)
+ * 0x151   FLUSH
 
 DISCOVER_REQ (0x0101)
 ---------------------
@@ -70,6 +70,76 @@ GET_ID_RESP (0x8130)
 00 45         IEEE1284 string length
 [rest]        IEEE1284 data, semicolon separated tokens
 
+FLUSH_REQ (0x0151)
+-------------------
+43 50 4e 50   CPNP 
+01 51         FLUSH
+00 00 00 07   SEQUENCE
+00 00 00 00   (no args)
+00 04         4-byte payload
+
+00 00 00 00
+
+FLUSH_RESP (0x8151)
+--------------------
+43 50 4e 50   CPNP
+81 51         FLUSH
+00 00 00 07   SEQUENCE
+00 00 00 00   (no args)
+00 04         4-byte payload
+
+00 00 10 00
+
+START_TCP_REQ (0x0110)
+-------------------
+43 50 4e 50   CPNP 
+01 10         START_TCP
+00 00 00 07   SEQUENCE
+00 00 00 00   (no args)
+01 88         392-byte payload
+
+00 00 00 00 00 00 00 00
+
+00 4b 00 41 00 4c 00 41
+00 4d 00 41 00 54 00 41 00 00 00 00 00 00 00 00   PC name (UTF-16)
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+
+00 70 00 69 00 7a 00 7a
+00 61 00 00 00 00 00 00 00 00 00 00 00 00 00 00   username (UTF-16)
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+
+00 54 00 65 00 73 00 74
+00 20 00 50 00 61 00 67 00 65 00 00 00 00 00 00   Job name (UTF-16)
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+
+START_TCP_RESP (0x8151)
+--------------------
+43 50 4e 50   CPNP
+81 10         START_TCP
+00 00 00 07   SEQUENCE
+00 00 00 00   (no args)
+00 08         8-byte payload
+
+30 30 30 30 PP PP 00 00     PP == TCP PORT.
+
 NULL_REQ (0x0000)
 -----------------
 43 50 4e 50   CPNP
@@ -94,7 +164,7 @@ GET_STATUS_REQ (0x0120)
 43 50 4e 50   CPNP 
 01 20         GET_STATUS
 00 00 00 00   SEQUENCE
-00 XX 00 00   (??? Job ID for TCP?)
+00 XX 00 00   (??? Job ID for TCP? 0x01 or 0x02?)
 00 00         (no payload)
 
 GET_STATUS_RESP (0x8120) over UDP
@@ -152,13 +222,14 @@ GET_STATUS_RESP (0x8120) over TCP
   [ Attempt to decode the details ]
   
   00 00 01 10 04 04 00 00 00 00 00 00 00 00 00 00
-  00 00 SS 00 01 00 00 00 XX XX XX XX YY YY YY YY
+  PP 00 SS 00 01 00 00 00 XX XX XX XX YY YY YY YY
   00 90 01 00 00 00 00 00 00 00 00 00 00 00 00 00
   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
   SS: State. 00 wait/01 flags/02 data req/03 done/04 error
   XX:  Data req offset (Little endian)
   YY:  Data req length (Little endian)
+  PP:  Next Plane => 00 == Y, 01 == M, 02 == C.
   
 [ Examples of output I've seen ]
 
@@ -231,19 +302,32 @@ DATA (0x0121)
 43 50 4e 50   CPNP
 01 21         DATA
 00 00 00 00   SEQUENCE
-00 01 00 00   (args)
-00 40         (payload len)
+00 ZZ 00 00   (args/jobid)
+00 40         (payload len, varies)
 
-Three variations.  First one is flags:
+Four variations.  First one is flags:
 
-00 00 00 00 XX XX XX XX 00 00 00 00 YY YY YY YY   XX == msg len (64) YY == unknown, always 0x01
-00 00 QQ 00 00 00 00 00 00 00 00 00 00 00 00 00   QQ: 03 border, 02 none
+00 00 00 00 XX XX XX XX TT TT TT TT YY YY YY YY   XX == msg len (0x40)
+                                                  TT == 0x01 ???
+						  YY == 00 00 40 00 (for YMC???)
+00 00 00 RR 00 00 00 00 00 00 00 00 00 00 00 00   RR: 03 border, 02 none
 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
-Second one is pure payload.  payload len is actual bytes. (Max 4096 bytes?)
 
-Third one is the end of job stuff:
+Second variation is for planar YMC data, consisting of 28B plane header, filled to 4KiB of size:
+
+00 00 01 00 XX XX XX XX 01 00 00 00 YY YY YY YY   XX == total data len, YY == plane len (delta is header len, ie 28 bytes)
+
+00 00 00 QQ 00 00 00 00 00 00 00 00 00 00 00 00
+HH HH 00 00 VV VV 00 00 ?? 00 00 00               HH == rows (1232)
+                                                  VV == cols (1808)
+						  ?? == plane (00/01/02 == Y/M/C)
+[... initial payload ...]
+
+Third one is pure payload, used by jpeg printing.
+
+Fourth one is the end of job stuff:
 
 00 00 03 00 XX XX XX XX 00 00 00 00 00 00 00 00   XX == msg len (64)
 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
@@ -260,18 +344,9 @@ DATA_RESP (0x8121)
 
 Payload is always 4 bytes:
 
-00 00 XX 00
 00 00 LL LL
 
  LL == bytes received 
- XX == printer state.
-       00: Wait        [ busy? ]
-       01: Send flags  [ ready for job ]
-       02: Send data   [ ready for image data ]
-       03: Done        [ print complete, send final packet ]
-       04: Error       [ reported error ]
-
-  Not sure how to tell the difference which one is in use?
 
 END_JOB_REQ (0x0111)
 --------------------
