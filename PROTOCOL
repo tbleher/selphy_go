@@ -302,14 +302,15 @@ DATA (0x0121)
 43 50 4e 50   CPNP
 01 21         DATA
 00 00 00 00   SEQUENCE
-00 ZZ 00 00   (args/jobid)
+00 ZZ 00 00   (args/jobid?)
 00 40         (payload len, varies)
 
 Four variations.  First one is flags:
 
-00 00 00 00 XX XX XX XX TT TT TT TT YY YY YY YY   XX == msg len (0x40)
+00 ?? 00 00 XX XX XX XX TT TT TT TT YY YY YY YY   XX == msg len (0x40)
                                                   TT == 0x01 ???
 						  YY == 00 00 40 00 (for YMC???)
+						  ?? == 0x01 ?? seems to match ZZ??
 00 00 00 RR 00 00 00 00 00 00 00 00 00 00 00 00   RR: 03 border, 02 none
 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
