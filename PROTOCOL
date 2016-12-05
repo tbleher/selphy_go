@@ -320,7 +320,6 @@ Second variation is for planar YMC data, consisting of 28B plane header, filled 
 
 00 00 01 00 XX XX XX XX 01 00 00 00 YY YY YY YY   XX == total data len, YY == plane len (delta is header len, ie 28 bytes)
 
-00 00 00 QQ 00 00 00 00 00 00 00 00 00 00 00 00
 HH HH 00 00 VV VV 00 00 ?? 00 00 00               HH == rows (1232)
                                                   VV == cols (1808)
 						  ?? == plane (00/01/02 == Y/M/C)
