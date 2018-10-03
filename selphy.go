@@ -510,10 +510,16 @@ func (p *printer) start_job() {
 	p.jobs = p.jobs[1:]
 }
 
+func myUsage() {
+	fmt.Printf("Usage: %s [OPTIONS] files-to-print...\n", os.Args[0])
+	flag.PrintDefaults()
+}
+
 func main() {
 	printer_mac := flag.String("printer_mac", "", "MAC address of printer")
 	printer_ip := flag.String("printer_ip", CPNP_ADDR, "IP address of printer")
 	border := flag.Bool("border", false, "Allow white borders, don't crop")
+	flag.Usage = myUsage
 	flag.Parse()
 
 	p := new_printer()
