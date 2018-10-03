@@ -353,10 +353,10 @@ func (c *device) print_data_request(head []byte, body []byte) {
         state := 0
 	
 	if (len(body) < 0x12) {
-		fmt.Println("state too short: %d", len(body))
+		fmt.Println("state too short:", len(body))
         } else {
 		state = int(body[0x12])
-		fmt.Println("state %d", state)
+		fmt.Println("state", state)
 	}
 	
 	/* It frequently seems to repeat the last status response, I suppose
@@ -400,7 +400,7 @@ func (c *device) print_data_request(head []byte, body []byte) {
 		fmt.Println("Printer reported error.")
 		os.Exit(1)
 	default:
-		fmt.Println("Printer reported unknown state %d", state)
+		fmt.Println("Printer reported unknown state", state)
 		os.Exit(1)
 	}
 }
@@ -512,7 +512,7 @@ func (p *printer) start_job() {
 
 func main() {
 	printer_mac := flag.String("printer_mac", "", "MAC address of printer")
-	printer_ip := flag.String("printer_ip", CPNP_ADDR, "IP addres of printer")
+	printer_ip := flag.String("printer_ip", CPNP_ADDR, "IP address of printer")
 	border := flag.Bool("border", false, "Allow white borders, don't crop")
 	flag.Parse()
 
